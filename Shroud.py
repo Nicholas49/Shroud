@@ -30,6 +30,9 @@ def start_menu():
         print("3: Exit")
         choice = input("> ")
 
+    # When the user selects the operation to perform their userdata is either generated or retrieved, either way their
+    # username and (hashed) password is passed into the main program.
+
         if choice == "1":
             signupresult = signup()
             if not signupresult == "bad":
@@ -118,6 +121,9 @@ def signup():
 
 
 def signin():
+
+    # Ask for username and verify that it doesn't match the username of any existing user objects
+
     username = input("Enter Username: ")
 
     if finduser(username):
@@ -125,6 +131,10 @@ def signin():
     else:
         print("User not found")
         return "bad"
+
+    # Ask for password, hash it, then compare the hash to the hashpass for the retrieved user object
+    # if the hashed passwords match, return the username and password as a dictionary
+    # otherwise, offer users the options to re-enter the password or go back to the main menu
 
     while True:
 
@@ -142,9 +152,15 @@ def signin():
 
 
 def main_program(username, hashbass):
+
+    # All contact data is retrieved, a lengthy process but it's included in the while loop so that if new contacts are
+    # added, the user doesn't have to log out and back in to use them.
+
     while True:
         youser = finduser(username)
         populate_contact_list(youser, hashbass)
+
+        # A straitforward menu. If none of the available options are picked the user is prompted retry until one is
 
         br(2)
         print("-- Main Menu --")
@@ -165,6 +181,10 @@ def main_program(username, hashbass):
         elif op == "3":
             add_contact(youser, hashbass)
         elif op == "4":
+
+            # The only operation performed inside the main program instead of being referenced from outside because
+            # it's so short. Very helpful for debugging, but I left it in so users can keep track of their contacts.
+
             br(2)
             print("Your contacts: ")
             contact_names = list(youser.contactlist.keys())
@@ -179,6 +199,10 @@ def main_program(username, hashbass):
 
 
 def cryptmenu(youser, en):
+
+    # This function is multipurpose, it either encrypts or decrypts based on the second value passed in
+    # Retrieve the keys (names) of all the contacts and print them out for the user to select
+
     contact_names = list(youser.contactlist.keys())
     snumb = 1
 
@@ -202,16 +226,26 @@ def cryptmenu(youser, en):
                 return
 
     print("Enter message:")
-    themedium = input("> ")
+    themessage = input("> ")
 
     if en:
-        themessage = base_convert(themedium)
+
+        # Converts the message to hexidecimal since the crypt function only works with
+        # A nonce is packaged with the message to avoid reusing the same cipher each time which would make the
+        # cipher vulnerable
+
+        themedium = base_convert(themessage)
         nonce = uuid.uuid4().hex
     else:
-        themessage = themedium.split("l")[0]
-        nonce = themedium.split("l")[1]
 
-    encrypted_message = crypt(en, themessage, youser.contactlist[contact_names[snumb]], nonce)
+        # Apologies for the McLuhan reference
+
+        themedium = themessage.split("l")[0]
+        nonce = themessage.split("l")[1]
+
+    # Finally the message in ready to be encrypted or decrypted using the crypt() function
+
+    encrypted_message = crypt(en, themedium, youser.contactlist[contact_names[snumb]], nonce)
 
     if en:
         encrypted_message += "l" + nonce
@@ -328,7 +362,7 @@ def br(numb=1):
 # Data Retrieval
 
 def populate_user_list():
-    """Opens the users.txt file and converts each line of data into a User object, then adds this to the Users list"""
+    # Opens the users.txt file and converts each line of data into a User object, then adds this to the Users list"""
 
     filey = open("users.txt", "r")
 
@@ -397,20 +431,42 @@ def base_convert(text,
 
 
 def crypt(en, hext, hexkey, salt="none"):
+
+    # The salt is optional, but usually used since it allows for unique ciphers
+    # If a salt is present it gets hashed with the key to create a new key unrecognizable from the original
+    # but still fully deterministic."""
+
+    # This is the core function the program is built around. It's a multipurpose function that can encrypt or
+    # decrypt based on the first value passed in"""
+
     hexalph = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"]
+
+    # The salt is optional, but usually used since it allows for unique ciphers
+    # If a salt is present it gets hashed with the key to create a new key unrecognizable from the original
+    # but still fully deterministic."""
 
     if not salt == "none":
         hexkey = salt_hash(hexkey, salt)
+
+    # In the likely case that the message is longer than the key, the key must be extended to be at least the same
+    # length without repeating. Repeating the cipher creates a vulnerability in long messages where letter frequency
+    # can be used.
+    # I decided to use a block cipher for simplicity's sake. Each block segment is the hash of the previous
+    # making the whole thing predictable based on the original key, but non-repeating.
 
     bloqq = hash_alg(hexkey)
     while len(hext) > len(hexkey):
         hexkey += bloqq
         bloqq = hash_alg(bloqq)
 
+    # Both the message and the cipher are converted to a list of ints to be added or subtracted
+
     numbtext = tonumblist(hext, hexalph)
     numbkey = tonumblist(hexkey, hexalph)
     resultnumbs = []
     finaltext = ""
+
+    # We add or subtract the lists entity by entity, values that go above 15 or below zero wrap around
 
     for b in range(len(numbtext)):
         if en:
@@ -418,6 +474,8 @@ def crypt(en, hext, hexkey, salt="none"):
         else:
             numb = len(hexalph) + numbtext[b] - numbkey[b % len(numbkey)]
         resultnumbs.append(numb)
+
+    # And we convert the result into a string to return
 
     for b in resultnumbs:
         finaltext += hexalph[b % len(hexalph)]
@@ -431,9 +489,10 @@ def pcrypt(n, key, message):
 
 
 def toint(stri, alf):
-    """takes in a string of characters and then, using the supplied alphabet, interprets the
-    #string as a number with a base the size of the alphabet, each character representing a digit.
-    #It then converts this number to a base 10 representation and returns it as an integer."""
+
+    # takes in a string of characters and then, using the supplied alphabet, interprets the
+    # string as a number with a base the size of the alphabet, each character representing a digit.
+    # It then converts this number to a base 10 representation and returns it as an integer."""
 
     numblist = tonumblist(stri, alf)
 
@@ -497,13 +556,25 @@ def hash_alg(pas):
 
 
 def gen_pkeys():
+
+    # Uses all the other Public/Private Key functions to generate a working public private key pair using the RSA system
+
+    # First generate two different primes.
+    # For now I'm only using numbers up to 10^8 since going larger causes bugs for some reason
+    # I fully intend to use much larger primes once I figure out why this is happening
+
     p = genprime(50, (10 ** 8))
     q = p
     while q == p:
         q = genprime(50, (10 ** 8))
     n = q * p
 
+    # Computing the totient of the two primes
+
     l = int(lcm(q - 1, p - 1))
+
+    # For the exponent I'm using 17
+    # Though if 17 happens to be a divisor of the totient it counts up by 2 until it finds another prime that isn't
 
     e = 17
     while l % e == 0:
@@ -511,12 +582,19 @@ def gen_pkeys():
         while not isprime(e):
             e += 2
 
+    # Here I use that scary modular multiplicative inverse function to find the decryping exponent
+
     d = multi_inverse(e, l)
+
+    # And return it all as a list for easy accessability
 
     return [n, e, int(d)]
 
 
 def isprime(numb):
+
+    # fairly straitforward primality test. Saves time by only testing for divisors up to the square root of the number
+
     if numb % 2 == 0:
         return False
     else:
@@ -528,6 +606,11 @@ def isprime(numb):
 
 
 def genprime(floor, ceil):
+
+    # Finds a prime number within the provided range using basic trial and error
+    # The use of the randint() function is one potential vulnerability of this program since it's not considered
+    # Cryptographically secure. I'm looking into replacing it with a better RNG soon.
+
     if ceil < 11:
         ceil = 11
 
@@ -540,10 +623,16 @@ def genprime(floor, ceil):
 
 
 def lcm(q, p):
+
+    # Uses the greatest common divisor function to efficiently compute the least common multiple
+
     return (q * p) / gcd(q, p)
 
 
 def gcd(a, b):
+
+    # Uses Euclids algorithm to compute the greatest common denominator
+
     while not b == 0:
         temp = b
         b = a % b
@@ -552,6 +641,10 @@ def gcd(a, b):
 
 
 def multi_inverse(a, b):
+
+    # Computes the modular multiplicative inverse of an exponent and modulus using Euclid's Extended Algorithm
+    # I'm not gonna lie, I don't really understand the math behind this
+    # I'll try to understand it better when I get some time, but for now it's enough to know that it does work
 
     x = 0
     y = 1
