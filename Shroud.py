@@ -7,6 +7,8 @@ fullalf = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ',./=-
 
 hexalf = "0123456789abcdef"
 
+hexalfsplit = hexalf + "l"
+
 
 class User:
     def __init__(self, name, passw, pkeys, salta, saltb):
@@ -90,8 +92,8 @@ def signup():
     #  and encrypt using the password and saltb
 
     keys = gen_pkeys()
-    pkeystring = str(keys[0]) + " " + str(keys[1]) + " " + str(keys[2])
-    hexedpkeys = base_convert(pkeystring)
+    pkeystring = str(keys[0]) + "l" + str(keys[1]) + "l" + str(keys[2])
+    hexedpkeys = base_convert(pkeystring, hexalfsplit, hexalf)
     encrypted_pkeys = crypt(True, hexedpkeys, hashwordb, hashwordb)
 
     # Write all the input and generated data into a new line in the users.txt file
@@ -263,8 +265,8 @@ def cryptmenu(youser, en):
 
 
 def add_contact(userguy, hashbass):
-    pkeys = base_convert(crypt(False, userguy.pkeys, hashbass, hashbass), hexalf, fullalf)
-    pkeylist = pkeys.split()
+    pkeys = base_convert(crypt(False, userguy.pkeys, hashbass, hashbass), hexalf, hexalfsplit)
+    pkeylist = pkeys.split("l")
     modulus = pkeylist[0]
     pubkey = pkeylist[1]
     privkey = pkeylist[2]
@@ -508,9 +510,9 @@ def toint(stri, alf):
 
 
 def tostring(numb, alf):
-    """the inverse of toint, this function takes in an integer and converts it into a
-    a 'base x' representation in the form of a string where x is the number of
-    characters in the provided alphabet"""
+    # The inverse of toint, this function takes in an integer and converts it into a
+    # a 'base x' representation in the form of a string where x is the number of
+    # characters in the provided alphabet"""
 
     count = 0
     outstring = ""
