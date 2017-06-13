@@ -39,14 +39,13 @@ def start_menu():
             signupresult = signup()
             if not signupresult == "bad":
                 theuser = finduser(signupresult['username'])
-                main_program(theuser.username, signupresult['hashbass'])
+                main_program(theuser, signupresult['hashbass'])
 
         elif choice == "2":
             signinresult = signin()
             if not signinresult == "bad":
                 theuser = finduser(signinresult['username'])
-                hashbass = salt_hash(signinresult['password'], theuser.saltb)
-                main_program(theuser.username, hashbass)
+                main_program(theuser, signinresult['hashbass'])
 
         elif choice == "3":
             break
@@ -94,7 +93,7 @@ def signup():
     keys = gen_pkeys()
     pkeystring = str(keys[0]) + "l" + str(keys[1]) + "l" + str(keys[2])
     hexedpkeys = base_convert(pkeystring, hexalfsplit, hexalf)
-    encrypted_pkeys = crypt(True, hexedpkeys, hashwordb, hashwordb)
+    encrypted_pkeys = crypt(hexedpkeys, hashwordb, hashwordb)
 
     # Write all the input and generated data into a new line in the users.txt file
 
@@ -118,8 +117,7 @@ def signup():
 
     # Lastly, return the username and password so the main program can use them
 
-    signupcred = {'username': username, 'hashbass': hashwordb}
-    return signupcred
+    return {'username': username, 'hashbass': hashwordb}
 
 
 def signin():
@@ -142,24 +140,24 @@ def signin():
 
         password = input("Enter Password: ")
 
-        hashword = salt_hash(password, theuser.salta)
+        hashworda = salt_hash(password, theuser.salta)
+        hashwordb = salt_hash(password, theuser.saltb)
 
-        if hashword == theuser.hashpass:
+        if hashworda == theuser.hashpass:
             print("Successful Login")
-            return {'username': username, 'password': password}
+            return {'username': username, 'hashbass': hashwordb}
         else:
             print("Wrong password")
             if goback():
                 return "bad"
 
 
-def main_program(username, hashbass):
+def main_program(youser, hashbass):
 
     # All contact data is retrieved, a lengthy process but it's included in the while loop so that if new contacts are
     # added, the user doesn't have to log out and back in to use them.
 
     while True:
-        youser = finduser(username)
         populate_contact_list(youser, hashbass)
 
         # A straitforward menu. If none of the available options are picked the user is prompted retry until one is
@@ -210,7 +208,7 @@ def cryptmenu(youser, en):
 
     while True:
         print("Select Contact")
-        print("")
+        br()
 
         num = 1
         for cname in contact_names:
@@ -247,7 +245,7 @@ def cryptmenu(youser, en):
 
     # Finally the message in ready to be encrypted or decrypted using the crypt() function
 
-    encrypted_message = crypt(en, themedium, youser.contactlist[contact_names[snumb]], nonce)
+    encrypted_message = crypt(themedium, youser.contactlist[contact_names[snumb]], nonce, en)
 
     if en:
         encrypted_message += "l" + nonce
@@ -265,11 +263,11 @@ def cryptmenu(youser, en):
 
 
 def add_contact(userguy, hashbass):
-    pkeys = base_convert(crypt(False, userguy.pkeys, hashbass, hashbass), hexalf, hexalfsplit)
+    pkeys = base_convert(crypt(userguy.pkeys, hashbass, hashbass, False), hexalf, hexalfsplit)
     pkeylist = pkeys.split("l")
-    modulus = pkeylist[0]
-    pubkey = pkeylist[1]
-    privkey = pkeylist[2]
+    modulus = int(pkeylist[0])
+    pubkey = int(pkeylist[1])
+    privkey = int(pkeylist[2])
 
     while True:
         print("Are you creating or importing a contact?")
@@ -282,28 +280,29 @@ def add_contact(userguy, hashbass):
         choise = input("> ")
 
         if choise == "1":
-            print("Send this Public Key: " + modulus + "l" + pubkey)
+            print("Send this Public Key: " + str(modulus) + "l" + str(pubkey))
             input("")
             break
         elif choise == "2":
 
-            contname = input("Enter the name of the contact: ")
+            while True:
+                contname = input("Enter the name of the contact: ")
+                if oldcontact(contname, userguy):
+                    if goback():
+                        return
+                else:
+                    break
+
             fpubkey = input("Enter Public Key: ").split("l")
-            print("Encrypting... this might take a while on slow computers.")
             fmodulus = int(fpubkey[0])
 
             cipher = uuid.uuid4().hex
-
             int_ciph = toint(cipher, hexalf)
 
-            print("...")
-
             miniciph = int_ciph % fmodulus
-
-            print("...")
-
             finalciph = tostring(miniciph, hexalf)
 
+            print("Encrypting... this might take a while on slow computers.")
             enc_ciph = pcrypt(fmodulus, int(fpubkey[1]), miniciph)
 
             print("Encryption complete!")
@@ -312,19 +311,26 @@ def add_contact(userguy, hashbass):
             input("")
             br(2)
             break
-
         elif choise == "3":
-            contname = input("Enter the name of the contact: ")
+
+            while True:
+                contname = input("Enter the name of the contact: ")
+                if oldcontact(contname, userguy):
+                    if goback():
+                        return
+                else:
+                    break
 
             ecyph = int(input("Enter " + contname + "'s encrypted cipher: "))
+
             print("Decrypting cipher... ")
-            print("This might take a while on slow computers")
-            cyph = tostring(pcrypt(int(modulus), int(privkey), ecyph), hexalf)
-
+            cyph = tostring(pcrypt(modulus, privkey, ecyph), hexalf)
             print("Cipher successfully decrypted!")
-            importciph(userguy, contname, cyph, hashbass)
 
+            importciph(userguy, contname, cyph, hashbass)
+            print("Cipher imported")
             print("You may now communicate with " + contname + " securely.")
+
             input("")
             br(2)
             break
@@ -332,6 +338,15 @@ def add_contact(userguy, hashbass):
             break
         else:
             badinput("4")
+
+
+def oldcontact(contname, user):
+    prior_contacts = list(user.contactlist.keys())
+    for pc in prior_contacts:
+        if contname == pc:
+            print("A contact with that name already exists.")
+            return True
+    return False
 
 
 def badinput(num):
@@ -375,37 +390,25 @@ def populate_user_list():
 
 
 def populate_contact_list(user, hashbass):
+
     filer = open("user_contacts/" + user.username + "_contacts.txt", "r")
     for ln in filer:
-        linesp = ln.split()
+        linesp = ln.split("l")
         c_inf = linesp[0]
         c_salt = linesp[1]
         if len(c_inf) > 1:
-            dehashed_contact = base_convert(crypt(False, c_inf, hashbass, c_salt), hexalf, fullalf)
-            splitcontact = dehashed_contact.split("_")
+            dehashed_contact = base_convert(crypt(c_inf, hashbass, c_salt, False), hexalf, fullalf)
+            splitcontact = dehashed_contact.split("%")
             user.contactlist[splitcontact[0]] = splitcontact[1]
 
 
 def importciph(youser, contactname, cipher, hashbass):
-    while True:
-
-        yourcontactnames = youser.contactlist.keys()
-        if len(yourcontactnames) > 0:
-            for c in yourcontactnames:
-                if contactname == c:
-                    print("A contact with that name already exists")
-                    if goback():
-                        return
-                else:
-                    break
-        else:
-            break
 
     contactsalt = uuid.uuid4().hex
 
     contactfilename = "user_contacts/" + youser.username + "_contacts.txt"
     filez = open(contactfilename, "a")
-    filez.write(crypt(True, base_convert(contactname + "_" + cipher), hashbass, contactsalt) + " " + contactsalt + "\n")
+    filez.write(crypt(base_convert(contactname + "%" + cipher), hashbass, contactsalt) + "l" + contactsalt + "l" + "\n")
     filez.close()
 
 
@@ -432,7 +435,7 @@ def base_convert(text,
     return tostring(toint(text, alfin), alfout)
 
 
-def crypt(en, hext, hexkey, salt="none"):
+def crypt(hext, hexkey, salt="none", en=True):
 
     # The salt is optional, but usually used since it allows for unique ciphers
     # If a salt is present it gets hashed with the key to create a new key unrecognizable from the original
@@ -584,7 +587,7 @@ def gen_pkeys():
         while not isprime(e):
             e += 2
 
-    # Here I use that scary modular multiplicative inverse function to find the decryping exponent
+    # Here I use that scary modular multiplicative inverse function to find the decrypting exponent
 
     d = multi_inverse(e, l)
 
