@@ -2,6 +2,11 @@ import math
 import random
 
 
+# These are some mathematical functions used in the public/private key component of the program
+# 'gen_pkeys()' is the central function and the only one called outside this file.
+# The rest are used by gen_pkeys(), though their general-mathematic nature means they could be useful in other programs
+
+
 def gen_pkeys():
 
     # Uses all the other Public/Private Key functions to generate a working public private key pair using the RSA system

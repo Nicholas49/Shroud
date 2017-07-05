@@ -2,6 +2,10 @@ import math
 import hashlib
 
 
+# These are functions that take in some data and return it in an altered form
+# It can generally be devided into 3 categories: functions that encrypt/decrypt, hash, or convert the base of a string
+
+
 def base(text,
          alfin="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ',./=-;<>?+_:!@#$%^&*()[]{}`~|",
          alfout="0123456789abcdef"):

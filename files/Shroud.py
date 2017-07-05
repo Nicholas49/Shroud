@@ -4,6 +4,12 @@ import convert as con
 import pcrypt as pcr
 import data
 import retrieve as ret
+import ui
+
+
+# This file is the main body of the program, and is where the program actually runs.
+# The smaller functions and objects that support this one have been sorted and moved into the 'ui', 'retrieve', 'data',
+# 'pcrypt', 'convert', and 'alphabets' .py files
 
 
 def start_menu():
@@ -34,7 +40,7 @@ def start_menu():
             break
 
         else:
-            badinput("3")
+            ui.badinput("3")
 
 
 def signup():
@@ -58,7 +64,7 @@ def signup():
 
         if len(password) < 12:
             print("Password must be greater than 12 characters.")
-            if goback():
+            if ui.goback():
                 return "bad"
         else:
             break
@@ -96,7 +102,7 @@ def signup():
     newuser = data.User(username, hashworda, encrypted_pkeys, salta, saltb)
     data.Users.append(newuser)
     print("Account Created")
-    br(4)
+    ui.br(4)
 
     # Lastly, return the username and password so the main program can use them
 
@@ -131,7 +137,7 @@ def signin():
             return {'username': username, 'hashbass': hashwordb}
         else:
             print("Wrong password")
-            if goback():
+            if ui.goback():
                 return "bad"
 
 
@@ -145,16 +151,15 @@ def main_program(youser, hashbass):
 
         # A straitforward menu. If none of the available options are picked the user is prompted retry until one is
 
-        br(2)
+        ui.br(2)
         print("-- Main Menu --")
-        br(2)
+        ui.br(2)
         print("Pick an Operation: ")
         print("1: Encrypt")
         print("2: Decrypt")
-        print("3: Add Contact")
-        print("4: Print Contact List")
-        print("5: Logout")
-        br()
+        print("3: Manage Contacts")
+        print("4: Logout")
+        ui.br()
         op = input("> ")
 
         if op == "1":
@@ -162,23 +167,52 @@ def main_program(youser, hashbass):
         elif op == "2":
             cryptmenu(youser, False)
         elif op == "3":
-            add_contact(youser, hashbass)
+
+            while True:
+                print("1: Add Contact")
+                print("2: Delete Contact")
+                print("3: Print Contact/Cipher List")
+                print("4: Return")
+                ui.br()
+
+                op2 = input("> ")
+
+                if op2 == "1":
+                    add_contact(youser, hashbass)
+
+                elif op2 == "2":
+                    print("Which contact do you want to delete?")
+                    ui.br()
+
+                    contact = ui.choose_contact(youser)
+                    if not contact:
+                        ui.br()
+                    else:
+                        youser.contactlist.remove(contact)
+                        ret.savecontacts(youser, hashbass)
+
+                        print("Deleted " + contact['name'] + " from contact list.")
+                        ui.continu()
+
+                elif op2 == "3":
+
+                    ui.br(2)
+                    print("Your Contacts: ")
+                    ui.br(2)
+                    for cn in youser.contactlist:
+                        print("Name: " + cn['name'])
+                        print("Cipher: " + cn['cipher'])
+                        ui.br()
+                    input("")
+                    ui.br(2)
+                elif op2 == "4":
+                    break
+                else:
+                    ui.badinput("4")
         elif op == "4":
-
-            # The only operation performed inside the main program instead of being referenced from outside because
-            # it's so short. Very helpful for debugging, but I left it in so users can keep track of their contacts.
-
-            br(2)
-            print("Your contacts: ")
-            contact_names = list(youser.contactlist.keys())
-            for cn in contact_names:
-                print(cn)
-                print(youser.contactlist[cn])
-            br(2)
-        elif op == "5":
             return
         else:
-            badinput("5")
+            ui.badinput("5")
 
 
 def cryptmenu(youser, en):
@@ -186,27 +220,10 @@ def cryptmenu(youser, en):
     # This function is multipurpose, it either encrypts or decrypts based on the second value passed in
     # Retrieve the keys (names) of all the contacts and print them out for the user to select
 
-    contact_names = list(youser.contactlist.keys())
-    snumb = 1
+    contact = ui.choose_contact(youser)
 
-    while True:
-        print("Select Contact")
-        br()
-
-        num = 1
-        for cname in contact_names:
-            print(str(num) + ": " + cname)
-            num += 1
-
-        selection = input("> ")
-        snumb = int(selection) - 1
-
-        if 0 <= snumb < len(contact_names):
-            break
-        else:
-            badinput(str(len(contact_names)))
-            if goback():
-                return
+    if not contact:
+        return
 
     print("Enter message:")
     themessage = input("> ")
@@ -228,7 +245,7 @@ def cryptmenu(youser, en):
 
     # Finally the message in ready to be encrypted or decrypted using the crypt() function
 
-    encrypted_message = con.crypt(themedium, youser.contactlist[contact_names[snumb]], nonce, en)
+    encrypted_message = con.crypt(themedium, contact['cipher'], nonce, en)
 
     if en:
         encrypted_message += "l" + nonce
@@ -239,10 +256,10 @@ def cryptmenu(youser, en):
 
     print("Complete.")
     print("Here it is: ")
-    br()
+    ui.br()
     print(encrypted_message)
     input("")
-    br(2)
+    ui.br(2)
 
 
 def add_contact(userguy, hashbass):
@@ -259,7 +276,7 @@ def add_contact(userguy, hashbass):
         print("2: Send encrypted cipher")
         print("3: Import encrypted cipher")
         print("4: Return")
-        br()
+        ui.br()
         choise = input("> ")
 
         contname = ""
@@ -271,8 +288,8 @@ def add_contact(userguy, hashbass):
 
             while True:
                 contname = input("Enter the name of the contact: ")
-                if oldcontact(contname, userguy):
-                    if goback():
+                if ret.oldcontact(contname, userguy):
+                    if ui.goback():
                         return
                 else:
                     break
@@ -293,14 +310,14 @@ def add_contact(userguy, hashbass):
             print("Send " + contname + " this encrypted cipher: " + str(enc_ciph))
             ret.importciph(userguy, contname, finalciph, hashbass)
             input("")
-            br(2)
+            ui.br(2)
             break
         elif choise == "3":
 
             while True:
                 contname = input("Enter the name of the contact: ")
-                if oldcontact(contname, userguy):
-                    if goback():
+                if ret.oldcontact(contname, userguy):
+                    if ui.goback():
                         return
                 else:
                     break
@@ -316,48 +333,12 @@ def add_contact(userguy, hashbass):
             print("You may now communicate with " + contname + " securely.")
 
             input("")
-            br(2)
+            ui.br(2)
             break
         elif choise == "4":
             break
         else:
-            badinput("4")
-
-
-def oldcontact(contname, user):
-    prior_contacts = list(user.contactlist.keys())
-    for pc in prior_contacts:
-        if contname == pc:
-            print("A contact with that name already exists.")
-            return True
-    return False
-
-
-def badinput(num):
-    print("Not a valid entry.")
-    if num == "2":
-        print("Enter 1 or 2.")
-    else:
-        print("Enter a number (1 - " + num + ")")
-
-
-def goback():
-    while True:
-        print("")
-        print("1: Try again")
-        print("2: Return")
-        choice = input("> ")
-        if choice == "1":
-            return False
-        elif choice == "2":
-            return True
-        badinput("2")
-
-
-def br(numb=1):
-    numb = int(numb)
-    for i in range(numb):
-        print("")
+            ui.badinput("4")
 
 
 start_menu()
