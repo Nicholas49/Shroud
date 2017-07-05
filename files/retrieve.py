@@ -1,7 +1,8 @@
 import uuid as uu
+
 import alphabets as alf
-import data
 import convert
+import data
 
 
 # These are all functions that retrieve, or check the existence of, some data stored elsewhere either in the user object

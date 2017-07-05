@@ -1,10 +1,11 @@
 import uuid as uu
+
 import alphabets as alf
 import convert as con
 import pcrypt as pcr
-import data
 import retrieve as ret
 import ui
+import data
 
 
 # This file is the main body of the program, and is where the program actually runs.
@@ -16,7 +17,9 @@ def start_menu():
     ret.populate_user_list()
 
     while True:
-        print("1: Sign Up")
+        print("-- Shroud --")
+        ui.br()
+        print("1: Create Account")
         print("2: Sign In")
         print("3: Exit")
         choice = input("> ")
@@ -169,10 +172,12 @@ def main_program(youser, hashbass):
         elif op == "3":
 
             while True:
+                print("-- Contact Menu --")
+                ui.br(2)
                 print("1: Add Contact")
                 print("2: Delete Contact")
                 print("3: Print Contact/Cipher List")
-                print("4: Return")
+                print("4: Return to Main Menu")
                 ui.br()
 
                 op2 = input("> ")
@@ -198,12 +203,12 @@ def main_program(youser, hashbass):
 
                     ui.br(2)
                     print("Your Contacts: ")
-                    ui.br(2)
+                    ui.br()
                     for cn in youser.contactlist:
                         print("Name: " + cn['name'])
                         print("Cipher: " + cn['cipher'])
                         ui.br()
-                    input("")
+                    ui.continu()
                     ui.br(2)
                 elif op2 == "4":
                     break
@@ -256,9 +261,10 @@ def cryptmenu(youser, en):
 
     print("Complete.")
     print("Here it is: ")
-    ui.br()
+    ui.br(2)
     print(encrypted_message)
-    input("")
+    ui.br(2)
+    ui.continu()
     ui.br(2)
 
 
@@ -282,7 +288,7 @@ def add_contact(userguy, hashbass):
         contname = ""
         if choise == "1":
             print("Send this Public Key: " + str(modulus) + "l" + str(pubkey))
-            input("")
+            ui.continu()
             break
         elif choise == "2":
 
@@ -309,7 +315,7 @@ def add_contact(userguy, hashbass):
             print("Encryption complete!")
             print("Send " + contname + " this encrypted cipher: " + str(enc_ciph))
             ret.importciph(userguy, contname, finalciph, hashbass)
-            input("")
+            ui.continu()
             ui.br(2)
             break
         elif choise == "3":
@@ -332,7 +338,7 @@ def add_contact(userguy, hashbass):
             print("Cipher imported")
             print("You may now communicate with " + contname + " securely.")
 
-            input("")
+            ui.continu()
             ui.br(2)
             break
         elif choise == "4":
