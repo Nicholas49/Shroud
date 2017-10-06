@@ -15,7 +15,7 @@ def base(text,
 def crypt(hext, hexkey, salt, en):
     # The salt is optional, but usually used since it allows for unique ciphers
     # If a salt is present it gets hashed with the key to create a new key unrecognizable from the original
-    # but still fully deterministic."""
+    # but still fully deterministic.
 
     # This is the core function the program is built around. It's a multipurpose function that can encrypt or
     # decrypt based on the first value passed in"""
@@ -24,7 +24,7 @@ def crypt(hext, hexkey, salt, en):
 
     # The salt is optional, but usually used since it allows for unique ciphers
     # If a salt is present it gets hashed with the key to create a new key unrecognizable from the original
-    # but still fully deterministic."""
+    # but still fully deterministic.
 
     if not salt == "none":
         hexkey = salt_hash(hexkey, salt)
@@ -128,6 +128,7 @@ def tonumblist(text, alf3):
         for y in range(len(alf3)):
             if x == alf3[y]:
                 numbi.append(y)
+                break
 
     return numbi
 
