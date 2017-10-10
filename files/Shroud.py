@@ -8,17 +8,14 @@ import data
 import tkinter as tk
 
 # This file is the main body of the program, and is where the program actually runs.
-# The smaller functions and objects that support this one have been sorted and moved into the 'ui', 'retrieve', 'data',
+# The smaller functions and objects that support this one have been sorted and moved into the 'retrieve', 'data',
 # 'pcrypt', 'convert', and 'alphabets' .py files
 
 
 def signup():
-    # Asks user for username and password. If both check out it generates a random public/private key pair then
-    # 2 random salts for encryption and encrypts the pkeys using the password and a salt
-    # it then finishes up by writing this all to a new line in the users.txt file and generates an empty user_contacts
-    # file.
-
-    # Ask for username and verify that it hasn't already been taken.
+    # Gets the username and password from the login screen. If both check out it generates a random public/private key
+    # pair then 2 random salts for encryption and encrypts the pkeys using the password and a salt it then finishes up
+    # by writing this all to a new line in the users.txt file and generates an empty user_contacts file.
 
     username = namebox.get()
     password = passbox.get()
@@ -46,7 +43,7 @@ def signup():
         hashwordb = con.salt_hash(password, saltb)
 
         # Generate pkeys (public and private keys, plus the modulus), then convert them to a string
-        #  and encrypt using the password and saltb
+        # and encrypt using the password and saltb
 
         keys = pcr.gen_pkeys()
         pkeystring = str(keys[0]) + "l" + str(keys[1]) + "l" + str(keys[2])
@@ -117,16 +114,22 @@ def main_program(u, hb):
     menubar.add_command(label="Crypto", command=lambda: menu_swap(framez, fr3))
 
     contactmenu = tk.Menu(menubar, tearoff=0)
-    contactmenu.add_command(label="Delete Contact", command=lambda: menu_swap(framez, frd))
-    contactmenu.add_command(label="View Info", command=lambda: menu_swap(framez, fri))
 
     contactmenu2 = tk.Menu(contactmenu, tearoff=0)
     contactmenu2.add_command(label="Send Cipher", command=lambda: menu_swap(framez, fra))
     contactmenu2.add_command(label="Import Cipher", command=lambda: menu_swap(framez, frm))
 
     contactmenu.add_cascade(label="Add Contact", menu=contactmenu2)
+    contactmenu.add_command(label="Delete Contact", command=lambda: menu_swap(framez, frd))
 
     menubar.add_cascade(label="Contacts", menu=contactmenu)
+
+    viewmenu = tk.Menu(menubar, tearoff=0)
+
+    viewmenu.add_command(label='Ciphers', command=lambda: menu_swap(framez, frc))
+    viewmenu.add_command(label='Public Key', command=lambda: menu_swap(framez, fri))
+
+    menubar.add_cascade(label='View', menu=viewmenu)
 
     fr3 = tk.Frame(fr, bg=b)
 
@@ -201,18 +204,38 @@ def main_program(u, hb):
     sendciph.grid(row=0, column=1, sticky=tk.N)
 
 # View Info
+    frc = tk.Frame(fr, bg=b)
+
+    cotitle = tk.Label(frc, text='Contact\nName', bg=b, fg=w)
+    cititle = tk.Label(frc, text='Cipher\nDouble Click to View', bg=b, fg=w)
+
+    cotitle.grid(row=0, column=0)
+    cititle.grid(row=0, column=1)
+
+    dd = 1
+    for cc in u.contactlist:
+        clab = tk.Label(frc, text=cc['name'], bg=b, fg='Blue')
+        ciphlab = tk.Entry(frc, fg=w, bg=w, relief=tk.FLAT)
+        ciphlab.insert(tk.INSERT, cc['cipher'])
+
+        clab.grid(row=dd, column=0)
+        ciphlab.grid(row=dd, column=1)
+
+        dd += 1
+
     fri = tk.Frame(fr, bg=b)
+
     pkeys = con.base(con.decrypt(u.pkeys, hb, hb), alf.hexd, alf.hexsplit)
     pkeys = pkeys.split("l")
 
     pkeylab = tk.Label(fri, text='Public Key: ', bg=b, fg=w)
-    pkeylab.grid(row=0, column=0)
+    pkeylab.grid(row=dd, column=0)
 
     urpkey = tk.Entry(fri, relief=tk.FLAT, bg=b, fg=w)
     urpkey.insert(tk.INSERT, pkeys[0] + "l" + pkeys[1])
-    urpkey.grid(row=0, column=1)
+    urpkey.grid(row=dd, column=1)
 
-    framez = [fr1, fr3, fra, frd, fri, frm]
+    framez = [fr1, fr3, fra, frd, frc, fri, frm]
 
     menu_swap(framez, fr3)
 
@@ -366,6 +389,11 @@ def displ(message, txt, col='White'):
     message['fg'] = col
 
 
+def showlab(lab):
+
+    lab['fg'] = 'White'
+
+
 ret.populate_user_list()
 
 root = tk.Tk()
@@ -396,4 +424,6 @@ si.grid(row=2, column=2, padx=1, pady=1, sticky=tk.E)
 
 fr.pack()
 fr1.grid(row=0, column=0)
+
+root.iconbitmap(r'Shroud.ico')
 root.mainloop()
