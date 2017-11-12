@@ -1,8 +1,10 @@
+import sys
 from cx_Freeze import setup, Executable
 
+
+
 setup(
-    name="",
+    name="shroud",
     version="0.1",
-    description="",
-    executables=[Executable("")],
-)
+    description="test",
+    executables=[Executable("Shroud.py")])
