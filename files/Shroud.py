@@ -126,10 +126,10 @@ def main_program(u, hb, mes='', mes2=''):
 
     viewmenu = tk.Menu(menubar, tearoff=0)
 
-    viewmenu.add_command(label='Ciphers', command=lambda: menu_swap(framez, frc, messa))
     viewmenu.add_command(label='Public Key', command=lambda: menu_swap(framez, fri, messa))
+    viewmenu.add_command(label='Delete', command=lambda: menu_swap(framez, frc, messa))
 
-    menubar.add_cascade(label='View', menu=viewmenu)
+    menubar.add_cascade(label='Account', menu=viewmenu)
 
     fr3 = tk.Frame(fr, bg=b)
 
@@ -211,22 +211,8 @@ def main_program(u, hb, mes='', mes2=''):
 # View Info
     frc = tk.Frame(fr, bg=b)
 
-    cotitle = tk.Label(frc, text='Contact\nName', bg=b, fg=w)
-    cititle = tk.Label(frc, text='Cipher\nDouble Click to View', bg=b, fg=w)
-
+    cotitle = tk.Label(frc, text='Feature Not Yet Available', bg=b, fg=w)
     cotitle.grid(row=0, column=0)
-    cititle.grid(row=0, column=1)
-
-    dd = 1
-    for cc in u.contactlist:
-        clab = tk.Label(frc, text=cc['name'], bg=b, fg='Blue')
-        ciphlab = tk.Entry(frc, fg=w, bg=w, relief=tk.FLAT)
-        ciphlab.insert(tk.INSERT, cc['cipher'])
-
-        clab.grid(row=dd, column=0)
-        ciphlab.grid(row=dd, column=1)
-
-        dd += 1
 
     fri = tk.Frame(fr, bg=b)
 
@@ -234,11 +220,11 @@ def main_program(u, hb, mes='', mes2=''):
     pkeys = pkeys.split("l")
 
     pkeylab = tk.Label(fri, text='Public Key: ', bg=b, fg=w)
-    pkeylab.grid(row=dd, column=0)
+    pkeylab.grid(row=0, column=0)
 
     urpkey = tk.Entry(fri, relief=tk.FLAT, bg=b, fg=w)
     urpkey.insert(tk.INSERT, pkeys[0] + "l" + pkeys[1])
-    urpkey.grid(row=dd, column=1)
+    urpkey.grid(row=0, column=1)
 
     framez = [fr1, fr3, fra, frd, frc, fri, frm]
 
